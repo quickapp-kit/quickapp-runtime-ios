@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "runtimeCompositionManifest",
+  "profileId": "ios-v1-debug",
+  "target": "ios",
+  "runtimeAbi": "quickapp-kit-runtime-v1",
+  "conformance": "v1",
+  "buildMode": "debug",
+  "observationLevel": "baseline",
+  "jsEngine": {
+    "engineId": "quickjs",
+    "engineVersion": "1",
+    "engineAbi": "quickapp-kit-js-engine-v1",
+    "moduleId": "engine.quickjs"
+  },
+  "linkedModules": [
+    {"moduleId": "kernel.bridge", "category": "kernel"},
+    {"moduleId": "kernel.render", "category": "kernel"},
+    {"moduleId": "kernel.event", "category": "kernel"},
+    {"moduleId": "kernel.lifecycle", "category": "kernel"},
+    {"moduleId": "kernel.runtime-tree", "category": "kernel"},
+    {"moduleId": "kernel.transaction", "category": "kernel"},
+    {"moduleId": "runtime.js-framework", "category": "runtime"},
+    {"moduleId": "engine.quickjs", "category": "engine"}
+  ],
+  "components": ["View", "Text", "Button"],
+  "capabilities": ["system.router", "system.prompt", "system.device"],
+  "binaryBytes": 1
+}
