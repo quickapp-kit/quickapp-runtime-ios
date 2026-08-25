@@ -1,0 +1,5 @@
+rpk=media-001.rpk
+ios.video.prepared surface=srf:1 node=node:3
+ios.feature.probe.teardown.begin
+ios.runtime.stopped surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0 uiSurfaces=1 uiNodes=6
+ios.feature.probe.teardown completed=1

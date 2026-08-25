@@ -1,0 +1,6 @@
+rpk=media-001.rpk
+QUICKAPP_IOS_VIDEO_FORCE_FAILURE=1
+ios.video.source surface=srf:1 node=node:3 status=failed code=VIDEO_SOURCE_REJECTED
+ios.event.error.dispatched surface=srf:1 node=node:3 accepted=1
+ios.js.event.executed surface=srf:1 handler=hdl:5 accepted=1
+ios.ui.mount.result surface=srf:1 revision=0 operations=37 mounted=1

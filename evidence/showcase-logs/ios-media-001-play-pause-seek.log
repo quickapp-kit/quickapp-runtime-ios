@@ -1,0 +1,13 @@
+rpk=media-001.rpk
+node=node:3
+ios.stage=rpk.verified
+ios.ui.video.created surface=srf:1 node=node:3
+ios.video.source surface=srf:1 node=node:3 provider=local-bundle
+ios.video.prepared surface=srf:1 node=node:3
+ios.event.prepared.dispatched surface=srf:1 node=node:3 accepted=1
+ios.video.control surface=srf:1 node=node:3 action=play status=completed
+ios.event.start.dispatched surface=srf:1 node=node:3 accepted=1
+ios.event.timeupdate.dispatched surface=srf:1 node=node:3 accepted=1
+ios.video.control surface=srf:1 node=node:3 action=pause status=completed
+ios.event.pause.dispatched surface=srf:1 node=node:3 accepted=1
+ios.video.control surface=srf:1 node=node:3 action=seek position=1.000 status=completed

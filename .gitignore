@@ -2,6 +2,10 @@
 .build-cache/
 .swiftpm/
 DerivedData/
+build-ios-sim/
+build-ios-ninja/
+build-host/
+build-host-*/
 xcuserdata/
 *.xcuserstate
 .DS_Store

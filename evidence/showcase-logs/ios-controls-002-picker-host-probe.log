@@ -1,0 +1,62 @@
+ios.probe.mount surface=srf:1 revision=0 operations=58 mode=0
+ios.probe.mount.op=CreateHost node=node:1
+ios.probe.mount.op=SetHostProp node=node:1 name=backgroundColor
+ios.probe.mount.op=SetHostLayout node=node:1 rect=<0.0,0.0,390.0,844.0>
+ios.probe.mount.op=CreateHost node=node:2
+ios.probe.mount.op=SetHostProp node=node:2 name=text
+ios.probe.mount.op=SetHostProp node=node:2 name=color
+ios.probe.mount.op=SetHostProp node=node:2 name=fontSize
+ios.probe.mount.op=SetHostLayout node=node:2 rect=<20.0,22.0,350.0,30.0>
+ios.probe.mount.op=CreateHost node=node:3
+ios.probe.mount.op=SetHostProp node=node:3 name=text
+ios.probe.mount.op=SetHostProp node=node:3 name=color
+ios.probe.mount.op=SetHostProp node=node:3 name=fontSize
+ios.probe.mount.op=SetHostLayout node=node:3 rect=<20.0,80.0,350.0,18.0>
+ios.probe.mount.op=CreateHost node=node:4
+ios.probe.mount.op=SetHostProp node=node:4 name=enabled
+ios.probe.mount.op=SetHostProp node=node:4 name=max
+ios.probe.mount.op=SetHostProp node=node:4 name=min
+ios.probe.mount.op=SetHostProp node=node:4 name=step
+ios.probe.mount.op=SetHostProp node=node:4 name=value
+ios.probe.mount.op=SetHostLayout node=node:4 rect=<20.0,107.0,240.0,36.0>
+ios.probe.mount.op=CreateHost node=node:5
+ios.probe.mount.op=SetHostProp node=node:5 name=text
+ios.probe.mount.op=SetHostProp node=node:5 name=color
+ios.probe.mount.op=SetHostProp node=node:5 name=fontSize
+ios.probe.mount.op=SetHostLayout node=node:5 rect=<20.0,152.0,350.0,15.0>
+ios.probe.mount.op=CreateHost node=node:6
+ios.probe.mount.op=SetHostProp node=node:6 name=text
+ios.probe.mount.op=SetHostProp node=node:6 name=color
+ios.probe.mount.op=SetHostProp node=node:6 name=fontSize
+ios.probe.mount.op=SetHostLayout node=node:6 rect=<20.0,189.0,350.0,18.0>
+ios.probe.mount.op=CreateHost node=node:7
+ios.probe.mount.op=SetHostProp node=node:7 name=mode
+ios.probe.mount.op=SetHostProp node=node:7 name=range
+ios.probe.mount.op=SetHostProp node=node:7 name=selected
+ios.probe.mount.op=SetHostProp node=node:7 name=backgroundColor
+ios.probe.mount.op=SetHostProp node=node:7 name=borderRadius
+ios.probe.mount.op=SetHostProp node=node:7 name=color
+ios.probe.mount.op=SetHostLayout node=node:7 rect=<20.0,216.0,240.0,38.0>
+ios.probe.mount.op=CreateHost node=node:8
+ios.probe.mount.op=SetHostProp node=node:8 name=text
+ios.probe.mount.op=SetHostProp node=node:8 name=color
+ios.probe.mount.op=SetHostProp node=node:8 name=fontSize
+ios.probe.mount.op=SetHostLayout node=node:8 rect=<20.0,264.0,350.0,15.0>
+ios.probe.mount.op=CreateHost node=node:9
+ios.probe.mount.op=SetHostProp node=node:9 name=enabled
+ios.probe.mount.op=SetHostProp node=node:9 name=text
+ios.probe.mount.op=SetHostProp node=node:9 name=backgroundColor
+ios.probe.mount.op=SetHostProp node=node:9 name=borderRadius
+ios.probe.mount.op=SetHostProp node=node:9 name=color
+ios.probe.mount.op=SetHostLayout node=node:9 rect=<20.0,313.0,180.0,36.0>
+ios.probe.mount.op=InsertHostChild node=node:2 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:3 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:4 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:5 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:6 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:7 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:8 parent=node:1
+ios.probe.mount.op=InsertHostChild node=node:9 parent=node:1
+ios.probe.first surfaces=1 nodes=9 handlers=3 jsResources=3
+ios.probe.after_event type=picker surfaces=1 nodes=9 handlers=3 jsResources=3
+ios.probe.runtime.stopped surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0

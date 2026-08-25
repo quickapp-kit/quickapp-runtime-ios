@@ -1,0 +1,22 @@
+ios.event.click.queued surface=srf:1 node=node:4 accepted=1
+ios.js.event.queued surface=srf:1 handler=hdl:1 accepted=1
+ios.event.click.dispatched surface=srf:1 node=node:4 accepted=1
+ios.js.event.executed surface=srf:1 handler=hdl:1 accepted=1
+ios.render.submit surface=srf:1 revision=1 operations=3 accepted=1
+ios.event.click.queued surface=srf:2 node=node:4 accepted=1
+ios.probe.mount surface=srf:1 revision=0 operations=132 mode=0
+ios.probe.first surfaces=1 nodes=24 handlers=4 jsResources=3
+ios.probe.mount surface=srf:1 revision=1 operations=9 mode=1
+ios.probe.mount.op=CreateHost node=node:25
+ios.probe.mount.op=SetHostProp node=node:25 name=text
+ios.probe.mount.op=SetHostProp node=node:25 name=color
+ios.probe.mount.op=SetHostProp node=node:25 name=fontSize
+ios.probe.mount.op=SetHostLayout node=node:25
+ios.probe.mount.op=InsertHostChild node=node:25 parent=node:1
+ios.probe.mount.op=SetHostProp node=node:3 name=text
+ios.probe.mount.op=SetHostLayout node=node:3
+ios.probe.mount.op=MoveHost node=node:10 parent=node:1
+ios.probe.after_click surfaces=1 nodes=25 handlers=4 jsResources=3
+ios.probe.after_back surfaces=1 nodes=25 handlers=4 jsResources=3
+ios.probe.runtime.stopped surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0
+case=gallery-001 exit=0

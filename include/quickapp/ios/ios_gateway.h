@@ -1,0 +1,38 @@
+#pragma once
+
+#ifdef __OBJC__
+#import <UIKit/UIKit.h>
+#else
+class UIView;
+#endif
+
+#include <memory>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "quickapp/core/feature/module_registry.h"
+#include "quickapp/ios/runtime_spine.h"
+
+namespace quickapp::ios {
+
+class IOSGateway;
+namespace platform {
+class Gateway;
+}
+
+std::shared_ptr<platform::Gateway> makeGateway(UIView *root_view) noexcept;
+void bindGateway(const std::shared_ptr<platform::Gateway> &gateway,
+                 const std::shared_ptr<RuntimeSpine> &spine) noexcept;
+void closeGateway(const std::shared_ptr<platform::Gateway> &gateway) noexcept;
+using ResourceBytes = std::shared_ptr<const std::vector<std::uint8_t>>;
+void setGatewayResources(
+    const std::shared_ptr<platform::Gateway> &gateway,
+    std::map<std::string, ResourceBytes> resources) noexcept;
+bool controlVideo(const std::shared_ptr<platform::Gateway> &gateway,
+                  std::string surface_id, std::string node_id,
+                  std::string action, double position_seconds = 0) noexcept;
+core::feature::Provider *featureProvider(
+    const std::shared_ptr<platform::Gateway> &gateway) noexcept;
+
+}  // namespace quickapp::ios
