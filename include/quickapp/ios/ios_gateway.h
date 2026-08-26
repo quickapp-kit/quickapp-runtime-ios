@@ -8,6 +8,7 @@ class UIView;
 
 #include <memory>
 #include <map>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,26 @@ void setGatewayResources(
 bool controlVideo(const std::shared_ptr<platform::Gateway> &gateway,
                   std::string surface_id, std::string node_id,
                   std::string action, double position_seconds = 0) noexcept;
+bool controlTabs(const std::shared_ptr<platform::Gateway> &gateway,
+                 std::string surface_id, std::string node_id,
+                 std::int64_t index) noexcept;
+bool controlClick(const std::shared_ptr<platform::Gateway> &gateway,
+                  std::string surface_id, std::string node_id) noexcept;
+bool controlInput(const std::shared_ptr<platform::Gateway> &gateway,
+                  std::string surface_id, std::string node_id,
+                  std::string value) noexcept;
+bool controlSwitch(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   bool checked) noexcept;
+bool controlSlider(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   double value) noexcept;
+bool controlPicker(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   std::int64_t index) noexcept;
+bool controlScroll(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   double offset) noexcept;
 core::feature::Provider *featureProvider(
     const std::shared_ptr<platform::Gateway> &gateway) noexcept;
 

@@ -19,6 +19,7 @@ set(QUICKAPP_RPK_LIST_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/show
 set(QUICKAPP_RPK_PLATFORM_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/platform-001/dist/platform-001.rpk")
 set(QUICKAPP_RPK_MEDIA_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/media-001/dist/media-001.rpk")
 set(QUICKAPP_RPK_TABS_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/tabs-001/dist/tabs-001.rpk")
+set(QUICKAPP_RPK_CAPABILITY_GALLERY_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/capability-gallery-001/dist/capability-gallery-001.rpk")
 set(QUICKAPP_VIDEO_SAMPLE "${CMAKE_CURRENT_SOURCE_DIR}/../source/third_party/lvgl/tests/src/test_assets/test_video_birds.mp4")
 
 find_package(ZLIB REQUIRED)
@@ -102,6 +103,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     "${QUICKAPP_RPK_PLATFORM_001}"
     "${QUICKAPP_RPK_MEDIA_001}"
     "${QUICKAPP_RPK_TABS_001}"
+    "${QUICKAPP_RPK_CAPABILITY_GALLERY_001}"
     "${QUICKAPP_VIDEO_SAMPLE}"
   )
   set_source_files_properties(
@@ -116,6 +118,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     "${QUICKAPP_RPK_PLATFORM_001}"
     "${QUICKAPP_RPK_MEDIA_001}"
     "${QUICKAPP_RPK_TABS_001}"
+    "${QUICKAPP_RPK_CAPABILITY_GALLERY_001}"
     "${QUICKAPP_VIDEO_SAMPLE}"
     PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources

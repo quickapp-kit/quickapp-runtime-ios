@@ -335,6 +335,8 @@ class IOSGateway final : public platform::Gateway,
       }
       self->surfaces_.clear();
       self->nodes_.clear();
+      NSLog(@"ios.runtime.platform.resources surfaces=%zu nodes=%zu",
+            self->surfaces_.size(), self->nodes_.size());
     };
     if (NSThread.isMainThread) {
       clear();
@@ -584,6 +586,160 @@ class IOSGateway final : public platform::Gateway,
         NSLog(@"ios.video.control surface=%s node=%s action=%s status=failed code=VIDEO_ACTION_REJECTED",
               control_surface.c_str(), control_node.c_str(), control_action.c_str());
       }
+    });
+  }
+
+  bool controlTabs(const std::string &surface, const std::string &node,
+                   std::int64_t index) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() ||
+          ![found->second.view isKindOfClass:UISegmentedControl.class] ||
+          index < 0 ||
+          index >= static_cast<std::int64_t>(found->second.tabs_items.size())) {
+        NSLog(@"ios.tabs.control surface=%s node=%s index=%lld status=failed code=TABS_NOT_READY",
+              control_surface.c_str(), control_node.c_str(),
+              static_cast<long long>(index));
+        return;
+      }
+      UISegmentedControl *tabs = static_cast<UISegmentedControl *>(found->second.view);
+      tabs.selectedSegmentIndex = static_cast<NSInteger>(index);
+      NSLog(@"ios.tabs.control surface=%s node=%s index=%lld status=completed",
+            control_surface.c_str(), control_node.c_str(),
+            static_cast<long long>(index));
+      [tabs sendActionsForControlEvents:UIControlEventValueChanged];
+    });
+  }
+
+  bool controlClick(const std::string &surface, const std::string &node) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() ||
+          ![found->second.view isKindOfClass:UIButton.class]) {
+        NSLog(@"ios.button.control surface=%s node=%s status=failed code=BUTTON_NOT_READY",
+              control_surface.c_str(), control_node.c_str());
+        return;
+      }
+      UIButton *button = static_cast<UIButton *>(found->second.view);
+      NSLog(@"ios.button.control surface=%s node=%s status=completed",
+            control_surface.c_str(), control_node.c_str());
+      [button sendActionsForControlEvents:UIControlEventTouchUpInside];
+    });
+  }
+
+  bool controlInput(const std::string &surface, const std::string &node,
+                    const std::string &value) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    const std::string control_value = value;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() ||
+          ![found->second.view isKindOfClass:UITextField.class]) {
+        NSLog(@"ios.input.control surface=%s node=%s status=failed code=INPUT_NOT_READY",
+              control_surface.c_str(), control_node.c_str());
+        return;
+      }
+      UITextField *input = static_cast<UITextField *>(found->second.view);
+      input.text = [NSString stringWithUTF8String:control_value.c_str()];
+      [input becomeFirstResponder];
+      [input sendActionsForControlEvents:UIControlEventEditingDidBegin];
+      [input sendActionsForControlEvents:UIControlEventEditingChanged];
+      [input resignFirstResponder];
+      [input sendActionsForControlEvents:UIControlEventEditingDidEnd];
+      NSLog(@"ios.input.control surface=%s node=%s status=completed",
+            control_surface.c_str(), control_node.c_str());
+    });
+  }
+
+  bool controlSwitch(const std::string &surface, const std::string &node,
+                     bool checked) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() ||
+          ![found->second.view isKindOfClass:UISwitch.class]) {
+        NSLog(@"ios.switch.control surface=%s node=%s status=failed code=SWITCH_NOT_READY",
+              control_surface.c_str(), control_node.c_str());
+        return;
+      }
+      UISwitch *toggle = static_cast<UISwitch *>(found->second.view);
+      toggle.on = checked;
+      [toggle sendActionsForControlEvents:UIControlEventValueChanged];
+      NSLog(@"ios.switch.control surface=%s node=%s checked=%d status=completed",
+            control_surface.c_str(), control_node.c_str(), checked ? 1 : 0);
+    });
+  }
+
+  bool controlSlider(const std::string &surface, const std::string &node,
+                     double value) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    const double control_value = value;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() ||
+          ![found->second.view isKindOfClass:UISlider.class] ||
+          !std::isfinite(control_value)) {
+        NSLog(@"ios.slider.control surface=%s node=%s status=failed code=SLIDER_NOT_READY",
+              control_surface.c_str(), control_node.c_str());
+        return;
+      }
+      UISlider *slider = static_cast<UISlider *>(found->second.view);
+      slider.value = static_cast<float>(control_value);
+      [slider sendActionsForControlEvents:UIControlEventValueChanged];
+      NSLog(@"ios.slider.control surface=%s node=%s value=%.3f status=completed",
+            control_surface.c_str(), control_node.c_str(), control_value);
+    });
+  }
+
+  bool controlPicker(const std::string &surface, const std::string &node,
+                     std::int64_t index) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() || ![found->second.view isKindOfClass:UIButton.class] ||
+          found->second.picker_range.empty() || index < 0 ||
+          index >= static_cast<std::int64_t>(found->second.picker_range.size())) {
+        NSLog(@"ios.picker.control surface=%s node=%s status=failed code=PICKER_NOT_READY",
+              control_surface.c_str(), control_node.c_str());
+        return;
+      }
+      openPickerFor(control_surface, control_node);
+      picker_pending_selection_ = static_cast<NSInteger>(index);
+      confirmPicker();
+      NSLog(@"ios.picker.control surface=%s node=%s index=%lld status=completed",
+            control_surface.c_str(), control_node.c_str(), static_cast<long long>(index));
+    });
+  }
+
+  bool controlScroll(const std::string &surface, const std::string &node,
+                     double offset) noexcept {
+    const std::string control_surface = surface;
+    const std::string control_node = node;
+    const double control_offset = offset;
+    return dispatchToMain(^{
+      auto found = nodes_.find(nodeKey(control_surface, control_node));
+      if (found == nodes_.end() ||
+          ![found->second.view isKindOfClass:UIScrollView.class] ||
+          !std::isfinite(control_offset)) {
+        NSLog(@"ios.scroll.control surface=%s node=%s status=failed code=SCROLL_NOT_READY",
+              control_surface.c_str(), control_node.c_str());
+        return;
+      }
+      UIScrollView *scroll = static_cast<UIScrollView *>(found->second.view);
+      [scroll setContentOffset:CGPointMake(scroll.contentOffset.x, control_offset)
+                       animated:NO];
+      handleScrollDidScroll(control_surface, control_node, scroll);
+      handleScrollDidEnd(control_surface, control_node, scroll);
+      NSLog(@"ios.scroll.control surface=%s node=%s offset=%.3f status=completed",
+            control_surface.c_str(), control_node.c_str(), control_offset);
     });
   }
 
@@ -1508,10 +1664,26 @@ class IOSGateway final : public platform::Gateway,
           const auto *color = std::get_if<std::string>(&value.value);
           UIColor *uiColor = color ? colorFromString(*color) : nil;
           if (!uiColor) return false;
-          if (value.name == "backgroundColor") view.backgroundColor = uiColor;
+          if (value.name == "backgroundColor") {
+            view.backgroundColor = uiColor;
+            if ([view isKindOfClass:UISegmentedControl.class]) {
+              UISegmentedControl *tabs = static_cast<UISegmentedControl *>(view);
+              tabs.selectedSegmentTintColor = UIColor.whiteColor;
+              [tabs setTitleTextAttributes:@{NSForegroundColorAttributeName: uiColor}
+                                   forState:UIControlStateSelected];
+            }
+          }
           else if ([view isKindOfClass:UILabel.class]) static_cast<UILabel *>(view).textColor = uiColor;
           else if ([view isKindOfClass:UIButton.class]) [static_cast<UIButton *>(view) setTitleColor:uiColor forState:UIControlStateNormal];
           else if ([view isKindOfClass:UITextField.class]) static_cast<UITextField *>(view).textColor = uiColor;
+          else if ([view isKindOfClass:UISegmentedControl.class]) {
+            NSDictionary *attributes = @{NSForegroundColorAttributeName: uiColor};
+            UISegmentedControl *tabs = static_cast<UISegmentedControl *>(view);
+            [tabs setTitleTextAttributes:attributes forState:UIControlStateNormal];
+            UIColor *selectedColor = view.backgroundColor ?: uiColor;
+            [tabs setTitleTextAttributes:@{NSForegroundColorAttributeName: selectedColor}
+                                 forState:UIControlStateSelected];
+          }
           else return false;
           return true;
         }
@@ -1732,6 +1904,61 @@ bool controlVideo(const std::shared_ptr<platform::Gateway> &gateway,
   if (!gateway) return false;
   return std::static_pointer_cast<IOSGateway>(gateway)->controlVideo(
       surface_id, node_id, action, position_seconds);
+}
+
+bool controlTabs(const std::shared_ptr<platform::Gateway> &gateway,
+                 std::string surface_id, std::string node_id,
+                 std::int64_t index) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlTabs(
+      surface_id, node_id, index);
+}
+
+bool controlClick(const std::shared_ptr<platform::Gateway> &gateway,
+                  std::string surface_id, std::string node_id) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlClick(
+      surface_id, node_id);
+}
+
+bool controlInput(const std::shared_ptr<platform::Gateway> &gateway,
+                  std::string surface_id, std::string node_id,
+                  std::string value) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlInput(
+      surface_id, node_id, value);
+}
+
+bool controlSwitch(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   bool checked) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlSwitch(
+      surface_id, node_id, checked);
+}
+
+bool controlSlider(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   double value) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlSlider(
+      surface_id, node_id, value);
+}
+
+bool controlPicker(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   std::int64_t index) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlPicker(
+      surface_id, node_id, index);
+}
+
+bool controlScroll(const std::shared_ptr<platform::Gateway> &gateway,
+                   std::string surface_id, std::string node_id,
+                   double offset) noexcept {
+  if (!gateway) return false;
+  return std::static_pointer_cast<IOSGateway>(gateway)->controlScroll(
+      surface_id, node_id, offset);
 }
 
 core::feature::Provider *featureProvider(

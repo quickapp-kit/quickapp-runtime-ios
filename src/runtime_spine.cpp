@@ -15,6 +15,7 @@
 #include <queue>
 #include <set>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -64,6 +65,92 @@ namespace qs = core::surface;
 namespace qcf = core::feature;
 namespace qj = js;
 namespace ja = js::abi;
+
+qj::RuntimeValue toJsRuntimeValue(const qc::RuntimeValue &value) {
+  return std::visit(
+      [](const auto &item) -> qj::RuntimeValue {
+        using Value = std::decay_t<decltype(item)>;
+        if constexpr (std::is_same_v<Value, qc::RuntimeValue::Null>) {
+          return qj::RuntimeValue(nullptr);
+        } else if constexpr (std::is_same_v<Value, bool>) {
+          return qj::RuntimeValue(item);
+        } else if constexpr (std::is_same_v<Value, std::int64_t>) {
+          return qj::RuntimeValue(static_cast<double>(item));
+        } else if constexpr (std::is_same_v<Value, double>) {
+          return qj::RuntimeValue(item);
+        } else if constexpr (std::is_same_v<Value, std::string>) {
+          return qj::RuntimeValue(item);
+        } else if constexpr (std::is_same_v<Value,
+                                             std::shared_ptr<const qc::RuntimeValue::Array>>) {
+          qj::RuntimeValue::Array result;
+          if (item != nullptr) {
+            result.reserve(item->size());
+            for (const auto &child : *item) {
+              result.push_back(toJsRuntimeValue(child));
+            }
+          }
+          return qj::RuntimeValue(std::move(result));
+        } else {
+          qj::RuntimeValue::Object result;
+          if (item != nullptr) {
+            for (const auto &[key, child] : *item) {
+              result.emplace(key, toJsRuntimeValue(child));
+            }
+          }
+          return qj::RuntimeValue(std::move(result));
+        }
+      },
+      value.storage());
+}
+
+ja::DynamicValues toJsDynamicValues(const qc::RuntimeValue::Object &values) {
+  ja::DynamicValues result;
+  for (const auto &[key, value] : values) {
+    result.emplace(key, toJsRuntimeValue(value));
+  }
+  return result;
+}
+
+void logJsEventPayload(const std::string &surface, const std::string &event_type,
+                       const ja::DynamicValues &payload) noexcept {
+  if (std::getenv("QUICKAPP_IOS_EVENT_PAYLOAD_LOG") == nullptr) return;
+  if (payload.empty()) {
+    std::fprintf(stderr,
+                 "ios.js.event.payload surface=%s event=%s payload=empty\n",
+                 surface.c_str(), event_type.c_str());
+    return;
+  }
+  for (const auto &[key, value] : payload) {
+    const auto &storage = value.storage();
+    if (std::holds_alternative<std::nullptr_t>(storage)) {
+      std::fprintf(stderr,
+                   "ios.js.event.payload surface=%s event=%s key=%s type=null\n",
+                   surface.c_str(), event_type.c_str(), key.c_str());
+    } else if (const auto *item = std::get_if<bool>(&storage)) {
+      std::fprintf(stderr,
+                   "ios.js.event.payload surface=%s event=%s key=%s type=boolean value=%s\n",
+                   surface.c_str(), event_type.c_str(), key.c_str(),
+                   *item ? "true" : "false");
+    } else if (const auto *item = std::get_if<double>(&storage)) {
+      std::fprintf(stderr,
+                   "ios.js.event.payload surface=%s event=%s key=%s type=number value=%.17g\n",
+                   surface.c_str(), event_type.c_str(), key.c_str(), *item);
+    } else if (const auto *item = std::get_if<std::string>(&storage)) {
+      std::fprintf(stderr,
+                   "ios.js.event.payload surface=%s event=%s key=%s type=string value=%s\n",
+                   surface.c_str(), event_type.c_str(), key.c_str(), item->c_str());
+    } else if (std::holds_alternative<qj::RuntimeValue::Array>(storage)) {
+      std::fprintf(stderr,
+                   "ios.js.event.payload surface=%s event=%s key=%s type=array\n",
+                   surface.c_str(), event_type.c_str(), key.c_str());
+    } else {
+      std::fprintf(stderr,
+                   "ios.js.event.payload surface=%s event=%s key=%s type=object\n",
+                   surface.c_str(), event_type.c_str(), key.c_str());
+    }
+  }
+  std::fflush(stderr);
+}
 
 class CoreMailbox final {
  public:
@@ -441,6 +528,17 @@ class JsCoreIngress final : public ja::CoreIngressPort,
     if (runtime_abi_ == nullptr) return qc::EnqueueResult::failure(
         qc::RuntimeError::simple(qc::RuntimeErrorCode::kPlatformRejected,
                                  "iOS Runtime ABI is closed"));
+    ja::DynamicValues payload;
+    try {
+      payload = toJsDynamicValues(event.payload);
+    } catch (...) {
+      return qc::EnqueueResult::failure(
+          qc::RuntimeError::simple(qc::RuntimeErrorCode::kOutOfMemory,
+                                   "iOS JS event payload conversion failed"));
+    }
+    logJsEventPayload(
+        event.surface_id.wire(),
+        std::string(qc::event::event_type_wire(event.event_type)), payload);
     ja::JsEventDispatch dispatch{
         event.request_id.wire(), event.surface_id.wire(), event.handler_id.wire(),
         std::string(qc::event::event_type_wire(event.event_type)), event.phase,
@@ -448,7 +546,7 @@ class JsCoreIngress final : public ja::CoreIngressPort,
          event.target.template_node_id.value()},
         {qc::runtime_tree::owner_wire(event.current_target.owner),
          event.current_target.template_node_id.value()},
-        static_cast<double>(event.timestamp_ns), {}};
+        static_cast<double>(event.timestamp_ns), std::move(payload)};
     const auto posted = runtime_abi_->postCallback(ja::JsInboundMessage{
         std::move(dispatch)});
     std::fprintf(stderr, "ios.js.event.queued surface=%s handler=%s accepted=%d\n",
