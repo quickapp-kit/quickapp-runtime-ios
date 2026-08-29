@@ -1095,16 +1095,17 @@ struct RuntimeSpine::Impl final {
     }
     iosStage("rpk.verified");
 #if QUICKAPP_IOS_UIKIT
-    std::map<std::string, ResourceBytes> resources;
+    ResourceRecords resources;
     for (const auto &[resource_path, descriptor] : package->resources()) {
-      (void)descriptor;
       std::shared_ptr<const qp::Bytes> bytes;
       if (!loader->load_resource(resource_path, [&](auto result) {
             if (result) bytes = std::make_shared<const qp::Bytes>(std::move(result).value());
           }) || !bytes) {
         throw std::runtime_error("iOS RPK resource load failed: " + resource_path);
       }
-      resources.emplace(resource_path, std::move(bytes));
+      resources.emplace(resource_path, ResourceRecord{
+          std::move(bytes), descriptor.media_type, descriptor.byte_length,
+          descriptor.sha256});
     }
     setGatewayResources(gateway, std::move(resources));
 #endif

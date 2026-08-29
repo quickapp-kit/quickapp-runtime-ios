@@ -43,3 +43,36 @@
 cmake --build build-ios-ninja --target quickapp_ios_simulator -j 4
 通过；仅有既有 iOS SDK 弃用和初始化警告。
 ```
+
+## Contract Revalidation (2026-08-27)
+
+结论：按当前 Media Resource Contract 约束重新验证后，旧文档中
+`example.invalid -> test_video_birds.mp4` 的 Bundle 映射不再成立；该映射违反了
+“不得用网络 URL 替代 RPK 内本地资源”。本次 iOS Adapter 已改为只接受 RPK 内
+`assets/...` 路径，并在 AVPlayer 创建前校验 MIME、字节长度、SHA-256 和 16 MiB
+预算，成功后才写入受控临时缓存。
+
+- 当前仓库没有独立命名为 Media Resource Contract 的文档；本次遵循现有
+  `host-component-contract.md`、`event-contract.md` 和 `artifact-contract.md` 的约束，
+  不新增或修改公共 Contract。
+- 真实 RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/media-001/dist/media-001.rpk`
+- RPK SHA-256：`439009523904f8335f96902e642e6d2150379dacdc28d3bceb690923ea0ba0df`
+- RPK 成员没有本地视频；仅有 `assets/images/media-poster.png`。Video `src` 为
+  `https://example.invalid/quickapp-kit/demo.mp4`，因此真实运行结果是
+  `MEDIA_PATH_INVALID -> MEDIA_SOURCE_REJECTED -> error`，不是 `prepared`。
+- 运行日志：`evidence/showcase-logs/ios-media-001-resource-contract-2026-08-27.log`
+- 错误态截图：`evidence/screenshots/ios-media-001-error-state-2026-08-27.png`
+- Bundle RPK：`build-ios-ninja/quickapp_ios_simulator.app/media-001.rpk`，SHA-256 同上。
+- 关键日志：
+  `ios.video.resource ... code=MEDIA_PATH_INVALID path=https://example.invalid/quickapp-kit/demo.mp4`
+  `ios.video.source ... code=MEDIA_SOURCE_REJECTED`
+  `ios.video.event ... type=error`
+  `ios.video.control ... action=play|pause|seek status=failed code=VIDEO_NOT_READY`
+- Teardown 日志：`ios.runtime.stopped surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0`，
+  随后 `ios.runtime.platform.resources surfaces=0 nodes=0`。
+- 在没有合规本地视频资源的前提下，`prepared/start/pause/finish` 不适用；没有伪造
+  AVPlayer 生命周期，也没有把视频字节传入 Core。
+
+可播放的下一条真实验收前提是：Toolkit 生成包含 `assets/videos/*.mp4` 的 RPK，且
+其资源描述包含与字节一致的 `video/mp4`、`byteLength` 和 `sha256`；该前提不能在
+本任务中通过修改 Core、Toolkit、RPK 或公共 Contract 绕过。

@@ -27,9 +27,16 @@ void bindGateway(const std::shared_ptr<platform::Gateway> &gateway,
                  const std::shared_ptr<RuntimeSpine> &spine) noexcept;
 void closeGateway(const std::shared_ptr<platform::Gateway> &gateway) noexcept;
 using ResourceBytes = std::shared_ptr<const std::vector<std::uint8_t>>;
+struct ResourceRecord final {
+  ResourceBytes bytes;
+  std::string media_type;
+  std::uint64_t byte_length{0};
+  std::string sha256;
+};
+using ResourceRecords = std::map<std::string, ResourceRecord, std::less<>>;
 void setGatewayResources(
     const std::shared_ptr<platform::Gateway> &gateway,
-    std::map<std::string, ResourceBytes> resources) noexcept;
+    ResourceRecords resources) noexcept;
 bool controlVideo(const std::shared_ptr<platform::Gateway> &gateway,
                   std::string surface_id, std::string node_id,
                   std::string action, double position_seconds = 0) noexcept;

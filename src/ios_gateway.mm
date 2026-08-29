@@ -4,6 +4,7 @@
 #import <objc/runtime.h>
 
 #include "quickapp/ios/ios_gateway.h"
+#include "quickapp/core/package/package_loader.h"
 
 #include <atomic>
 #include <algorithm>
@@ -13,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -147,7 +149,7 @@ class IOSGateway final : public platform::Gateway,
     spine_ = std::move(spine);
   }
 
-  void setResources(std::map<std::string, ResourceBytes> resources) noexcept {
+  void setResources(ResourceRecords resources) noexcept {
     std::lock_guard lock(mutex_);
     resources_ = std::move(resources);
   }
@@ -335,6 +337,7 @@ class IOSGateway final : public platform::Gateway,
       }
       self->surfaces_.clear();
       self->nodes_.clear();
+      self->clearVideoCache();
       NSLog(@"ios.runtime.platform.resources surfaces=%zu nodes=%zu",
             self->surfaces_.size(), self->nodes_.size());
     };
@@ -364,6 +367,7 @@ class IOSGateway final : public platform::Gateway,
       self->titles_.clear();
       self->meta_.clear();
       self->file_store_.clear();
+      self->clearVideoCache();
     };
     if (NSThread.isMainThread) clear();
     else dispatch_sync(dispatch_get_main_queue(), clear);
@@ -895,13 +899,23 @@ class IOSGateway final : public platform::Gateway,
     record.video_observer = nil;
   }
 
+  void clearVideoCache() noexcept {
+    for (const auto &path : video_cache_paths_) {
+      NSString *value = [NSString stringWithUTF8String:path.c_str()];
+      if (value != nil) {
+        [[NSFileManager defaultManager] removeItemAtPath:value error:nil];
+      }
+    }
+    video_cache_paths_.clear();
+  }
+
   void applyVideoPoster(NodeRecord &record) {
     if (record.video_controller == nil || record.video_poster.empty()) return;
     ResourceBytes bytes;
     {
       std::lock_guard lock(mutex_);
       const auto found = resources_.find(record.video_poster);
-      if (found != resources_.end()) bytes = found->second;
+      if (found != resources_.end()) bytes = found->second.bytes;
     }
     if (!bytes || bytes->empty()) return;
     NSData *data = [NSData dataWithBytes:bytes->data() length:bytes->size()];
@@ -980,18 +994,89 @@ class IOSGateway final : public platform::Gateway,
                        std::move(payload));
   }
 
-  NSURL *videoURLForSource(const std::string &source) {
-    if (std::getenv("QUICKAPP_IOS_VIDEO_FORCE_FAILURE") != nullptr) return nil;
-    if (source.find("example.invalid") != std::string::npos) {
-      return [[NSBundle mainBundle] URLForResource:@"test_video_birds"
-                                      withExtension:@"mp4"];
+  NSURL *materializeVideoResource(const std::string &source,
+                                  const std::string &surface,
+                                  const std::string &node) {
+    constexpr std::uint64_t kMaxVideoBytes = 16ULL * 1024ULL * 1024ULL;
+    if (std::getenv("QUICKAPP_IOS_VIDEO_FORCE_FAILURE") != nullptr) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_RESOURCE_FORCED_FAILURE",
+            surface.c_str(), node.c_str());
+      return nil;
     }
-    NSString *value = [NSString stringWithUTF8String:source.c_str()];
-    if ([value hasPrefix:@"file://"] || [value hasPrefix:@"http://"] ||
-        [value hasPrefix:@"https://"]) {
-      return [NSURL URLWithString:value];
+    if (source.empty() || !source.starts_with("assets/") ||
+        source.find("..") != std::string::npos || source.find('\\') != std::string::npos) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_PATH_INVALID path=%s",
+            surface.c_str(), node.c_str(), source.c_str());
+      return nil;
     }
-    return nil;
+
+    ResourceRecord resource;
+    {
+      std::lock_guard lock(mutex_);
+      const auto found = resources_.find(source);
+      if (found == resources_.end()) {
+        NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_RESOURCE_MISSING path=%s",
+              surface.c_str(), node.c_str(), source.c_str());
+        return nil;
+      }
+      resource = found->second;
+    }
+    if (!resource.bytes || resource.bytes->empty()) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_RESOURCE_EMPTY path=%s",
+            surface.c_str(), node.c_str(), source.c_str());
+      return nil;
+    }
+    if (resource.media_type != "video/mp4") {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_MIME_UNSUPPORTED mime=%s",
+            surface.c_str(), node.c_str(), resource.media_type.c_str());
+      return nil;
+    }
+    if (resource.byte_length != resource.bytes->size()) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_SIZE_MISMATCH expected=%llu actual=%lu",
+            surface.c_str(), node.c_str(),
+            static_cast<unsigned long long>(resource.byte_length),
+            static_cast<unsigned long>(resource.bytes->size()));
+      return nil;
+    }
+    if (resource.bytes->size() > kMaxVideoBytes) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_RESOURCE_BUDGET_EXCEEDED bytes=%lu limit=%llu",
+            surface.c_str(), node.c_str(),
+            static_cast<unsigned long>(resource.bytes->size()),
+            static_cast<unsigned long long>(kMaxVideoBytes));
+      return nil;
+    }
+    if (core::package::sha256_hex(*resource.bytes) != resource.sha256) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_CHECKSUM_MISMATCH path=%s",
+            surface.c_str(), node.c_str(), source.c_str());
+      return nil;
+    }
+
+    NSString *cache_root = [NSTemporaryDirectory()
+        stringByAppendingPathComponent:@"quickapp-kit-media-cache"];
+    NSError *cache_error = nil;
+    if (![[NSFileManager defaultManager] createDirectoryAtPath:cache_root
+                                    withIntermediateDirectories:YES
+                                                     attributes:nil
+                                                          error:&cache_error]) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_CACHE_CREATE_FAILED",
+            surface.c_str(), node.c_str());
+      return nil;
+    }
+    NSString *filename = [NSString stringWithUTF8String:resource.sha256.c_str()];
+    NSString *cache_path = [cache_root stringByAppendingPathComponent:
+        [filename stringByAppendingPathExtension:@"mp4"]];
+    NSData *data = [NSData dataWithBytes:resource.bytes->data()
+                                  length:resource.bytes->size()];
+    if (![data writeToFile:cache_path options:NSDataWritingAtomic error:&cache_error]) {
+      NSLog(@"ios.video.resource surface=%s node=%s status=failed code=MEDIA_CACHE_WRITE_FAILED",
+            surface.c_str(), node.c_str());
+      return nil;
+    }
+    video_cache_paths_.insert(std::string(cache_path.UTF8String));
+    NSLog(@"ios.video.resource surface=%s node=%s status=completed path=%s mime=%s bytes=%llu sha256=%s",
+          surface.c_str(), node.c_str(), source.c_str(), resource.media_type.c_str(),
+          static_cast<unsigned long long>(resource.bytes->size()), resource.sha256.c_str());
+    return [NSURL fileURLWithPath:cache_path];
   }
 
   void configureVideo(const std::string &surface, const std::string &node,
@@ -1005,9 +1090,9 @@ class IOSGateway final : public platform::Gateway,
     record.video_prepared = false;
     record.video_started = false;
     record.video_finished = false;
-    NSURL *url = videoURLForSource(record.video_src);
+    NSURL *url = materializeVideoResource(record.video_src, surface, node);
     if (url == nil) {
-      NSLog(@"ios.video.source surface=%s node=%s status=failed code=VIDEO_SOURCE_REJECTED",
+      NSLog(@"ios.video.source surface=%s node=%s status=failed code=MEDIA_SOURCE_REJECTED",
             surface.c_str(), node.c_str());
       dispatchVideoEvent(surface, node, core::package::EventType::kError);
       return;
@@ -1019,9 +1104,8 @@ class IOSGateway final : public platform::Gateway,
     record.video_player = player;
     record.video_controller.player = player;
     record.video_controller.showsPlaybackControls = record.video_controls;
-    NSLog(@"ios.video.source surface=%s node=%s url=%s provider=%s", surface.c_str(),
-          node.c_str(), record.video_src.c_str(),
-          record.video_src.find("example.invalid") != std::string::npos ? "local-bundle" : "direct");
+    NSLog(@"ios.video.source surface=%s node=%s provider=rpk-cache path=%s",
+          surface.c_str(), node.c_str(), url.path.UTF8String);
     QuickAppVideoObserver *observer = [QuickAppVideoObserver new];
     IOSGateway *strongSelf = this;
     const std::string event_surface = surface;
@@ -1630,7 +1714,7 @@ class IOSGateway final : public platform::Gateway,
           {
             std::lock_guard lock(mutex_);
             auto resource = resources_.find(*path);
-            if (resource != resources_.end()) bytes = resource->second;
+            if (resource != resources_.end()) bytes = resource->second.bytes;
           }
           if (!bytes || bytes->empty()) return false;
           NSData *data = [NSData dataWithBytes:bytes->data() length:bytes->size()];
@@ -1857,7 +1941,8 @@ class IOSGateway final : public platform::Gateway,
   std::map<std::string, __strong UIView *> surfaces_;
   std::map<std::string, NodeRecord> nodes_;
   std::map<std::string, __strong UIView *> feature_views_;
-  std::map<std::string, ResourceBytes> resources_;
+  ResourceRecords resources_;
+  std::set<std::string> video_cache_paths_;
   std::map<std::string, std::string> file_store_{{"private/platform-state.txt",
                                                   "ios-private-ready"}};
   std::map<std::string, std::string> titles_;
@@ -1892,7 +1977,7 @@ void closeGateway(const std::shared_ptr<platform::Gateway> &gateway) noexcept {
 
 void setGatewayResources(
     const std::shared_ptr<platform::Gateway> &gateway,
-    std::map<std::string, ResourceBytes> resources) noexcept {
+    ResourceRecords resources) noexcept {
   if (gateway) {
     std::static_pointer_cast<IOSGateway>(gateway)->setResources(std::move(resources));
   }
