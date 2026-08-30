@@ -1,6 +1,0 @@
-command=./build-host/quickapp_ios_spine_probe <platform-001.rpk> unused feature file read private/platform-state.txt
-ios.feature.result request=req:j-700000 surface=srf:1 status=unsupported
-ios.probe.first surfaces=1 nodes=8 handlers=3 jsResources=3
-ios.probe.feature.queued module=file method=read accepted=1
-ios.probe.after_event type=feature surfaces=1 nodes=8 handlers=3 jsResources=3
-ios.probe.runtime.stopped surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0
