@@ -22,6 +22,27 @@ set(QUICKAPP_RPK_TABS_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/show
 set(QUICKAPP_RPK_CAPABILITY_GALLERY_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/capability-gallery-001/dist/capability-gallery-001.rpk")
 set(QUICKAPP_VIDEO_SAMPLE "${CMAKE_CURRENT_SOURCE_DIR}/../source/third_party/lvgl/tests/src/test_assets/test_video_birds.mp4")
 
+set(QUICKAPP_IOS_RPK_RESOURCES
+  "${QUICKAPP_RPK}"
+  "${QUICKAPP_RPK_GALLERY}"
+  "${QUICKAPP_RPK_CONSUMER}"
+  "${QUICKAPP_RPK_WEARABLE}"
+  "${QUICKAPP_RPK_COMMERCE}"
+  "${QUICKAPP_RPK_CONTROLS}"
+  "${QUICKAPP_RPK_CONTROLS_002}"
+  "${QUICKAPP_RPK_LIST_001}"
+  "${QUICKAPP_RPK_PLATFORM_001}"
+  "${QUICKAPP_RPK_MEDIA_001}"
+  "${QUICKAPP_RPK_TABS_001}"
+  "${QUICKAPP_RPK_CAPABILITY_GALLERY_001}"
+)
+set(QUICKAPP_IOS_EXISTING_RPK_RESOURCES)
+foreach(QUICKAPP_IOS_RPK IN LISTS QUICKAPP_IOS_RPK_RESOURCES)
+  if(EXISTS "${QUICKAPP_IOS_RPK}")
+    list(APPEND QUICKAPP_IOS_EXISTING_RPK_RESOURCES "${QUICKAPP_IOS_RPK}")
+  endif()
+endforeach()
+
 find_package(ZLIB REQUIRED)
 option(QUICKAPP_IOS_ENABLE_STAGE_LOG "Enable iOS Runtime stage logs" OFF)
 
@@ -61,6 +82,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     src/platform_adapter.cpp
     src/runtime_spine.cpp
     src/ios_gateway.mm
+    src/quickapp_kit.mm
   )
   target_include_directories(quickapp_ios_platform PUBLIC include)
   target_link_libraries(quickapp_ios_platform PUBLIC
@@ -92,33 +114,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
 
   add_executable(quickapp_ios_simulator MACOSX_BUNDLE
     src/ios_simulator_main.mm
-    "${QUICKAPP_RPK}"
-    "${QUICKAPP_RPK_GALLERY}"
-    "${QUICKAPP_RPK_CONSUMER}"
-    "${QUICKAPP_RPK_WEARABLE}"
-    "${QUICKAPP_RPK_COMMERCE}"
-    "${QUICKAPP_RPK_CONTROLS}"
-    "${QUICKAPP_RPK_CONTROLS_002}"
-    "${QUICKAPP_RPK_LIST_001}"
-    "${QUICKAPP_RPK_PLATFORM_001}"
-    "${QUICKAPP_RPK_MEDIA_001}"
-    "${QUICKAPP_RPK_TABS_001}"
-    "${QUICKAPP_RPK_CAPABILITY_GALLERY_001}"
+    ${QUICKAPP_IOS_EXISTING_RPK_RESOURCES}
     "${QUICKAPP_VIDEO_SAMPLE}"
   )
   set_source_files_properties(
-    "${QUICKAPP_RPK}"
-    "${QUICKAPP_RPK_GALLERY}"
-    "${QUICKAPP_RPK_CONSUMER}"
-    "${QUICKAPP_RPK_WEARABLE}"
-    "${QUICKAPP_RPK_COMMERCE}"
-    "${QUICKAPP_RPK_CONTROLS}"
-    "${QUICKAPP_RPK_CONTROLS_002}"
-    "${QUICKAPP_RPK_LIST_001}"
-    "${QUICKAPP_RPK_PLATFORM_001}"
-    "${QUICKAPP_RPK_MEDIA_001}"
-    "${QUICKAPP_RPK_TABS_001}"
-    "${QUICKAPP_RPK_CAPABILITY_GALLERY_001}"
+    ${QUICKAPP_IOS_EXISTING_RPK_RESOURCES}
     "${QUICKAPP_VIDEO_SAMPLE}"
     PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources
@@ -142,6 +142,22 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
     XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "15.0"
   )
+
+  set(QUICKAPP_KIT_ARCHIVE "${CMAKE_CURRENT_BINARY_DIR}/libQuickAppKit.a")
+  set(QUICKAPP_KIT_INPUTS "$<TARGET_FILE:quickapp_ios_platform>")
+  foreach(QUICKAPP_KIT_DEP IN LISTS QUICKAPP_IOS_SHARED_LIBS)
+    if(TARGET "${QUICKAPP_KIT_DEP}")
+      list(APPEND QUICKAPP_KIT_INPUTS "$<TARGET_FILE:${QUICKAPP_KIT_DEP}>")
+    endif()
+  endforeach()
+  add_custom_command(
+    OUTPUT "${QUICKAPP_KIT_ARCHIVE}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${QUICKAPP_KIT_ARCHIVE}"
+    COMMAND /usr/bin/libtool -static -o "${QUICKAPP_KIT_ARCHIVE}" ${QUICKAPP_KIT_INPUTS}
+    DEPENDS quickapp_ios_platform ${QUICKAPP_IOS_SHARED_LIBS}
+    VERBATIM
+  )
+  add_custom_target(QuickAppKit DEPENDS "${QUICKAPP_KIT_ARCHIVE}")
 else()
   add_library(quickapp_ios_spine_host STATIC
     src/platform_adapter.cpp

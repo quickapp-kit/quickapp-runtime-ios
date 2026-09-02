@@ -28,3 +28,8 @@ evidence/*.log
 evidence/*.xml
 evidence/*.txt
 !evidence/**/img/**
+
+# xcframework build intermediates and output
+build-xcframework-device/
+build-xcframework-sim/
+dist/

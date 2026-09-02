@@ -102,6 +102,7 @@
 				13C6EA4530309C7400CFEA05 /* Sources */,
 				13C6EA4630309C7400CFEA05 /* Frameworks */,
 				13C6EA4730309C7400CFEA05 /* Resources */,
+				13C6EA7330309C7600CFEA05 /* Bundle RPK Catalog */,
 			);
 			buildRules = (
 			);
@@ -255,6 +256,21 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		13C6EA7330309C7600CFEA05 /* Bundle RPK Catalog */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "Bundle RPK Catalog";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nBUNDLE=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"${BUNDLE}\"\nfor ROOT in \"${SRCROOT}/../../quickapp-toolkit/evidence\" \"${SRCROOT}/../../quickapp-examples/showcases\"; do\n  if [ -d \"${ROOT}\" ]; then\n    find \"${ROOT}\" -type f -name '*.rpk' -exec cp -f {} \"${BUNDLE}/\" \\;\n  fi\ndone\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXTargetDependency section */
 		13C6EA5830309C7500CFEA05 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -391,6 +407,7 @@
 		13C6EA6B30309C7600CFEA05 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -398,6 +415,34 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = USLB7BU8KQ;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../dist/QuickAppKit.xcframework/ios-arm64-simulator",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../dist/QuickAppKit.xcframework/ios-arm64-simulator/Headers",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lQuickAppKit",
+					"-framework",
+					UIKit,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					AVKit,
+					"-framework",
+					CoreMedia,
+					"-lc++",
+					"-lz",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -409,10 +454,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.qiaoyang.quickapp.test;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.quickappkit.host;
+				PRODUCT_NAME = QuickAppKitHost;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/QuickAppRuntimeIOS/QuickAppKitHost-Bridging-Header.h";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -425,12 +471,41 @@
 		13C6EA6C30309C7600CFEA05 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = USLB7BU8KQ;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../dist/QuickAppKit.xcframework/ios-arm64",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../dist/QuickAppKit.xcframework/ios-arm64/Headers",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lQuickAppKit",
+					"-framework",
+					UIKit,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					AVKit,
+					"-framework",
+					CoreMedia,
+					"-lc++",
+					"-lz",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -442,9 +517,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.quickappkit.QuickAppRuntimeIOS;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.quickappkit.host;
+				PRODUCT_NAME = QuickAppKitHost;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/QuickAppRuntimeIOS/QuickAppKitHost-Bridging-Header.h";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;

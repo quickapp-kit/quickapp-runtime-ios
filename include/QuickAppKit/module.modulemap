@@ -1,0 +1,4 @@
+framework module QuickAppKit {
+  umbrella header "QuickAppKit.h"
+  export *
+}

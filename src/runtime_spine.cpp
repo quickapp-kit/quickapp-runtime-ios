@@ -370,8 +370,9 @@ class ControllerLifecycleResults final : public qs::SurfaceLifecycleResultSink {
 class ControllerInitialResults final : public qr::InitialContentResultSink {
  public:
   explicit ControllerInitialResults(
-      std::unique_ptr<qs::SurfaceController>* controller_slot) noexcept
-      : controller_slot_(controller_slot) {}
+      std::unique_ptr<qs::SurfaceController>* controller_slot,
+      platform::Gateway *gateway) noexcept
+      : controller_slot_(controller_slot), gateway_(gateway) {}
 
   void complete(qs::InitialContentResult result) noexcept override {
     iosStage(result.prepared ? "core.initial.prepared"
@@ -383,6 +384,9 @@ class ControllerInitialResults final : public qr::InitialContentResultSink {
       std::fflush(stderr);
     }
     auto* controller = controller_slot_ == nullptr ? nullptr : controller_slot_->get();
+    if (result.prepared && gateway_ != nullptr) {
+      gateway_->notifyStarted(result.surface_id.wire());
+    }
     const auto accepted = controller ? controller->enqueue(std::move(result))
                                       : qc::EnqueueResult::failure(
                                             qc::RuntimeError::simple(
@@ -393,6 +397,7 @@ class ControllerInitialResults final : public qr::InitialContentResultSink {
 
  private:
   std::unique_ptr<qs::SurfaceController>* controller_slot_{nullptr};
+  platform::Gateway *gateway_{nullptr};
 };
 
 class ControllerOperationResults final : public qs::SurfaceOperationResultSink {
@@ -1141,7 +1146,7 @@ struct RuntimeSpine::Impl final {
     auto mount = std::make_unique<platform::MountPort>(*gateway);
     auto render_results = std::make_unique<RenderResults>();
     render_results_raw = render_results.get();
-    auto initial_results = std::make_unique<ControllerInitialResults>(&controller);
+    auto initial_results = std::make_unique<ControllerInitialResults>(&controller, gateway.get());
     core_ingress = std::make_unique<JsCoreIngress>(mailbox);
     event_router = std::make_unique<qc::event::EventRouter>(*core_ingress);
     core_ingress->bindEventRouter(*event_router);

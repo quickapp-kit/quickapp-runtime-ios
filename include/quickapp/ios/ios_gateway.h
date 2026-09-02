@@ -9,6 +9,7 @@ class UIView;
 #include <memory>
 #include <map>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -34,6 +35,12 @@ struct ResourceRecord final {
   std::string sha256;
 };
 using ResourceRecords = std::map<std::string, ResourceRecord, std::less<>>;
+using RuntimeStartedCallback = std::function<void(std::string)>;
+using RuntimeFailedCallback = std::function<void(std::string, std::string)>;
+void setGatewayRuntimeCallbacks(
+    const std::shared_ptr<platform::Gateway> &gateway,
+    RuntimeStartedCallback started,
+    RuntimeFailedCallback failed) noexcept;
 void setGatewayResources(
     const std::shared_ptr<platform::Gateway> &gateway,
     ResourceRecords resources) noexcept;

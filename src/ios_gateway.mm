@@ -314,10 +314,29 @@ class IOSGateway final : public platform::Gateway,
 
   void notifyStarted(std::string_view surface_id) noexcept override {
     NSLog(@"ios.runtime.started surface=%s", std::string(surface_id).c_str());
+    RuntimeStartedCallback callback;
+    {
+      std::lock_guard lock(mutex_);
+      callback = started_callback_;
+    }
+    if (callback) callback(std::string(surface_id));
   }
 
   void notifyFailed(std::string_view code, std::string_view message) noexcept override {
     NSLog(@"ios.runtime.failed code=%s message=%s", std::string(code).c_str(), std::string(message).c_str());
+    RuntimeFailedCallback callback;
+    {
+      std::lock_guard lock(mutex_);
+      callback = failed_callback_;
+    }
+    if (callback) callback(std::string(code), std::string(message));
+  }
+
+  void setRuntimeCallbacks(RuntimeStartedCallback started,
+                           RuntimeFailedCallback failed) noexcept {
+    std::lock_guard lock(mutex_);
+    started_callback_ = std::move(started);
+    failed_callback_ = std::move(failed);
   }
 
   void notifyStopped(std::size_t surfaces, std::size_t nodes, std::size_t handlers,
@@ -344,7 +363,7 @@ class IOSGateway final : public platform::Gateway,
     if (NSThread.isMainThread) {
       clear();
     } else {
-      dispatch_sync(dispatch_get_main_queue(), clear);
+      dispatch_async(dispatch_get_main_queue(), clear);
     }
   }
 
@@ -370,7 +389,7 @@ class IOSGateway final : public platform::Gateway,
       self->clearVideoCache();
     };
     if (NSThread.isMainThread) clear();
-    else dispatch_sync(dispatch_get_main_queue(), clear);
+    else dispatch_async(dispatch_get_main_queue(), clear);
     std::lock_guard lock(mutex_);
     spine_.reset();
   }
@@ -1943,6 +1962,8 @@ class IOSGateway final : public platform::Gateway,
   std::map<std::string, __strong UIView *> feature_views_;
   ResourceRecords resources_;
   std::set<std::string> video_cache_paths_;
+  RuntimeStartedCallback started_callback_;
+  RuntimeFailedCallback failed_callback_;
   std::map<std::string, std::string> file_store_{{"private/platform-state.txt",
                                                   "ios-private-ready"}};
   std::map<std::string, std::string> titles_;
@@ -1980,6 +2001,16 @@ void setGatewayResources(
     ResourceRecords resources) noexcept {
   if (gateway) {
     std::static_pointer_cast<IOSGateway>(gateway)->setResources(std::move(resources));
+  }
+}
+
+void setGatewayRuntimeCallbacks(
+    const std::shared_ptr<platform::Gateway> &gateway,
+    RuntimeStartedCallback started,
+    RuntimeFailedCallback failed) noexcept {
+  if (gateway) {
+    std::static_pointer_cast<IOSGateway>(gateway)->setRuntimeCallbacks(
+        std::move(started), std::move(failed));
   }
 }
 
