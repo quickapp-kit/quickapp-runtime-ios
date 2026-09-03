@@ -139,6 +139,9 @@ int main(int argc, char **argv) {
   const std::string feature_module = argc > 4 ? argv[4] : "";
   const std::string feature_method = argc > 5 ? argv[5] : "";
   const std::string feature_value = argc > 6 ? argv[6] : "";
+  const std::string back_node = argc > 7
+      ? argv[7]
+      : (rpk.find("list-001") != std::string::npos ? "node:10" : "node:4");
   auto gateway = std::make_shared<quickapp::ios::ProbeGateway>();
   auto spine = quickapp::ios::RuntimeSpine::create(gateway, 390.0, 844.0);
   if (!spine) return 2;
@@ -230,7 +233,6 @@ int main(int argc, char **argv) {
   auto after = spine->snapshot();
   std::printf("ios.probe.after_click surfaces=%zu nodes=%zu handlers=%zu jsResources=%zu\n",
               after.surfaces, after.nodes, after.handlers, after.js_resources);
-    const auto back_node = rpk.find("list-001") != std::string::npos ? "node:10" : "node:4";
     static_cast<void>(spine->dispatchClick("srf:2", back_node, 2000000));
   for (int i = 0; i < 200; ++i) {
     if (spine->snapshot().surfaces <= 1) break;

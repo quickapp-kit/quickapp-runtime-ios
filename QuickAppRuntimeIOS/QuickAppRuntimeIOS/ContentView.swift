@@ -28,7 +28,7 @@ private struct RPKApp: Identifiable, Hashable {
 
 struct ContentView: View {
   @State private var apps: [RPKApp] = ContentView.loadApps()
-  @State private var selectedApp: RPKApp?
+  @State private var selectedApp: RPKApp? = ContentView.initialApp()
   @State private var runtime: QuickAppKitRuntime?
   @State private var surface: UIView?
   @State private var status = "请选择应用"
@@ -112,6 +112,14 @@ struct ContentView: View {
     (Bundle.main.urls(forResourcesWithExtension: "rpk", subdirectory: nil) ?? [])
       .map(RPKApp.init)
       .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+  }
+
+  private static func initialApp() -> RPKApp? {
+    let requestedName = ProcessInfo.processInfo.environment["QUICKAPP_RPK"]
+    guard let requestedName else { return nil }
+    return loadApps().first {
+      $0.name == requestedName || $0.url.deletingPathExtension().lastPathComponent == requestedName
+    }
   }
 
   private func open(_ app: RPKApp) {

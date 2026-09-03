@@ -9,25 +9,25 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(QUICKAPP_CORE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-runtime-core")
 set(QUICKAPP_JS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-runtime-js")
 set(QUICKAPP_RPK "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-toolkit/evidence/tk-s12-lvgl-p0.rpk")
-set(QUICKAPP_RPK_GALLERY "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/gallery-001/dist/gallery-001.rpk")
-set(QUICKAPP_RPK_CONSUMER "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/consumer-001/dist/consumer-001.rpk")
-set(QUICKAPP_RPK_WEARABLE "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/wearable-001/dist/wearable-001.rpk")
-set(QUICKAPP_RPK_COMMERCE "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk")
-set(QUICKAPP_RPK_CONTROLS "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/controls-001/dist/controls-001.rpk")
-set(QUICKAPP_RPK_CONTROLS_002 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/controls-002/dist/controls-002.rpk")
-set(QUICKAPP_RPK_LIST_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/list-001/dist/list-001.rpk")
-set(QUICKAPP_RPK_PLATFORM_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/platform-001/dist/platform-001.rpk")
-set(QUICKAPP_RPK_MEDIA_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/media-001/dist/media-001.rpk")
-set(QUICKAPP_RPK_TABS_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/tabs-001/dist/tabs-001.rpk")
-set(QUICKAPP_RPK_CAPABILITY_GALLERY_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/capability-gallery-001/dist/capability-gallery-001.rpk")
+set(QUICKAPP_RPK_INSPECTION_BOARD "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/inspection-board/dist/inspection-board.rpk")
+set(QUICKAPP_RPK_CONTENT_HUB "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/content-hub/dist/content-hub.rpk")
+set(QUICKAPP_RPK_HEALTH_SUMMARY "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/health-summary/dist/health-summary.rpk")
+set(QUICKAPP_RPK_SHOP "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/showcases/shop/dist/shop.rpk")
+set(QUICKAPP_RPK_CONTROLS "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/controls-001/dist/controls-001.rpk")
+set(QUICKAPP_RPK_CONTROLS_002 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/controls-002/dist/controls-002.rpk")
+set(QUICKAPP_RPK_LIST_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/list-001/dist/list-001.rpk")
+set(QUICKAPP_RPK_PLATFORM_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/platform-001/dist/platform-001.rpk")
+set(QUICKAPP_RPK_MEDIA_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/media-001/dist/media-001.rpk")
+set(QUICKAPP_RPK_TABS_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/tabs-001/dist/tabs-001.rpk")
+set(QUICKAPP_RPK_CAPABILITY_GALLERY_001 "${CMAKE_CURRENT_SOURCE_DIR}/../quickapp-examples/baseline-cases/capability-gallery-001/dist/capability-gallery-001.rpk")
 set(QUICKAPP_VIDEO_SAMPLE "${CMAKE_CURRENT_SOURCE_DIR}/../source/third_party/lvgl/tests/src/test_assets/test_video_birds.mp4")
 
 set(QUICKAPP_IOS_RPK_RESOURCES
   "${QUICKAPP_RPK}"
-  "${QUICKAPP_RPK_GALLERY}"
-  "${QUICKAPP_RPK_CONSUMER}"
-  "${QUICKAPP_RPK_WEARABLE}"
-  "${QUICKAPP_RPK_COMMERCE}"
+  "${QUICKAPP_RPK_INSPECTION_BOARD}"
+  "${QUICKAPP_RPK_CONTENT_HUB}"
+  "${QUICKAPP_RPK_HEALTH_SUMMARY}"
+  "${QUICKAPP_RPK_SHOP}"
   "${QUICKAPP_RPK_CONTROLS}"
   "${QUICKAPP_RPK_CONTROLS_002}"
   "${QUICKAPP_RPK_LIST_001}"
