@@ -33,3 +33,5 @@ evidence/*.txt
 build-xcframework-device/
 build-xcframework-sim/
 dist/
+# Xcode 默认构建/派生产物目录
+build/

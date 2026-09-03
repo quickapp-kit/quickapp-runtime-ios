@@ -139,7 +139,8 @@ struct ContentView: View {
     destroyRuntime()
     do {
       let created = try QuickAppKitRuntime.createRuntime(
-        withViewportWidth: 390, height: 844)
+        withViewportWidth: surface.bounds.width,
+        height: surface.bounds.height)
       try created.attachSurface(surface)
       runtime = created
       status = "正在加载 \(app.name)"
